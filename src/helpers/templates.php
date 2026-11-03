@@ -1,0 +1,395 @@
+<?php
+
+use MicroweberPackages\Format\Facades\Format;
+
+use Illuminate\Support\Facades\Cookie;
+use MicroweberPackages\MetaTags\Facades\FrontendMetaTags;
+
+function template_option_group()
+{
+    return 'mw-template-' . app()->template_manager->folder_name();
+}
+
+function template_dir($param = false)
+{
+    return app()->template_manager->dir($param);
+}
+
+/**
+ * Resolve a template folder name to its full directory path (trailing
+ * separator included), searching the primary Templates/ root first and then
+ * any extra template roots (config('microweber.extra_templates_paths'), e.g.
+ * ExtraTemplates/). Falls back to the primary path when the folder is not
+ * found anywhere, so behavior for Templates/ templates is unchanged and
+ * missing-template code paths stay identical.
+ */
+function template_full_dir($name)
+{
+    $name = (string) $name;
+    $primary = templates_dir() . $name . DIRECTORY_SEPARATOR;
+    if ($name === '' || is_dir($primary)) {
+        return $primary;
+    }
+    foreach ((array) config('microweber.extra_templates_paths', []) as $extra) {
+        $candidate = rtrim((string) $extra, '/\\') . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR;
+        if (is_dir($candidate)) {
+            return $candidate;
+        }
+    }
+    return $primary;
+}
+
+function template_url($param = false)
+{
+    return app()->template_manager->url($param);
+}
+
+function template_name()
+{
+    return app()->template_manager->folder_name();
+}
+
+function template_config($templateName = false)
+{
+    return app()->template_manager->get_config($templateName);
+}
+
+function icon_html($icon)
+{
+
+    if (!is_string($icon) || empty($icon)) {
+        return '';
+    }
+    if (str_starts_with($icon, '<i class="')) {
+        return Format::clean_xss($icon);
+    }
+    if (str_starts_with($icon, '<svg')) {
+        return Format::clean_xss($icon);
+    }
+    if (str_starts_with($icon, '<img')) {
+        return Format::clean_xss($icon);
+    }
+    if (str_starts_with($icon, '<span class="')) {
+        return Format::clean_xss($icon);
+    }
+    if (str_starts_with($icon, 'mdi-')) {
+        return '<i class="mdi ' . $icon . '"></i>';
+    }
+    if (str_starts_with($icon, 'mw-')) {
+        return '<i class="mw-icon ' . $icon . '"></i>';
+    }
+    if (str_starts_with($icon, 'icon-')) {
+        return '<i class="icon ' . $icon . '"></i>';
+    }
+    if (str_starts_with($icon, 'fa-')) {
+        return '<i class="fa ' . $icon . '"></i>';
+    }
+    if (str_starts_with($icon, 'glyphicon-')) {
+        return '<i class="glyphicon ' . $icon . '"></i>';
+    }
+    if (str_starts_with($icon, 'mdi-')) {
+        return '<i class="mdi ' . $icon . '"></i>';
+    }
+    if (str_starts_with($icon, 'icon-')) {
+        return '<i class="icon ' . $icon . '"></i>';
+    }
+
+
+    return '';
+}
+
+function current_template()
+{
+    return template_name();
+
+}
+
+
+function template_parent($templateName = false)
+{
+    return app()->template_manager->getParentTemplate($templateName);
+
+}
+
+function template_stylesheet_url()
+{
+    $template_settings = app()->template_manager->get_config();
+
+    $stylesheet_settings = false;
+    if (isset($template_settings['stylesheet_compiler']) and isset($template_settings['stylesheet_compiler']['settings'])) {
+        $stylesheet_settings = $template_settings['stylesheet_compiler']['settings'];
+    }
+
+//    if (!$stylesheet_settings) {
+//        return;
+//    }
+
+    if (!isset($template_settings['stylesheet_compiler']['source_file'])) {
+        return;
+    }
+
+    if (!isset($template_settings['stylesheet_compiler']['css_file'])) {
+        return;
+    }
+
+    $stylesheet = app()->template_manager->get_stylesheet($template_settings['stylesheet_compiler']['source_file'], $template_settings['stylesheet_compiler']['css_file'], true);
+    return $stylesheet;
+}
+
+function template_stylesheet()
+{
+    $stylesheet = template_stylesheet_url();
+    if ($stylesheet) {
+        return '<link href="' . $stylesheet . '" id="theme-style" rel="stylesheet" type="text/css" media="all"/>';
+    }
+}
+
+function template_default_css()
+{
+    $template_settings = app()->template_manager->get_config();
+
+    if (isset($template_settings['stylesheet_compiler']) and isset($template_settings['stylesheet_compiler']['css_file'])) {
+        return '<link href="' . template_url() . $template_settings['stylesheet_compiler']['css_file'] . '" id="theme-style" rel="stylesheet" type="text/css" media="all"/>';
+    } else {
+        return;
+    }
+}
+
+function template_framework()
+{
+
+    //   $css_framework = 'mw-ui';
+    $css_framework = 'mw-ui';
+    $css_framework = 'bootstrap5';
+
+    if (isset(app()->template_manager->get_config()['framework'])) {
+        $css_framework = app()->template_manager->get_config()['framework'];
+    }
+
+    return $css_framework;
+}
+
+function template_row_class()
+{
+
+    $css_framework = template_framework();
+
+    if ($css_framework == 'mw-ui') {
+        return 'mw-flex-row';
+    }
+
+    if ($css_framework == 'tailwind') {
+        return 'flex flex-wrap';
+    }
+    if ($css_framework == 'bootstrap3' || $css_framework == 'bootstrap4' || $css_framework == 'bootstrap5') {
+        return 'row';
+    }
+}
+
+function template_form_row_class()
+{
+    $css_framework = template_framework();
+
+    if ($css_framework == 'mw-ui') {
+        return 'mw-flex-row';
+    }
+
+    if ($css_framework == 'tailwind') {
+        return 'grid';
+    }
+
+    if ($css_framework == 'bootstrap3' || $css_framework == 'bootstrap4' || $css_framework == 'bootstrap5') {
+        return 'row';
+    }
+}
+
+function template_form_group_class()
+{
+    $css_framework = template_framework();
+
+    if ($css_framework == 'mw-ui') {
+        return '';
+    }
+
+    if ($css_framework == 'bootstrap3' || $css_framework == 'bootstrap4' || $css_framework == 'bootstrap5') {
+        return 'form-group';
+    }
+}
+
+function template_form_group_label_class()
+{
+    $css_framework = template_framework();
+
+    if ($css_framework == 'mw-ui') {
+        return '';
+    }
+
+    if ($css_framework == 'bootstrap3' || $css_framework == 'bootstrap4' || $css_framework == 'bootstrap5') {
+        return 'control-label';
+    }
+}
+
+function template_input_field_class()
+{
+    $css_framework = template_framework();
+
+    if ($css_framework == 'mw-ui') {
+        return 'mw-ui-field';
+    }
+
+    if ($css_framework == 'bootstrap3' || $css_framework == 'bootstrap4' || $css_framework == 'bootstrap5') {
+        return 'form-control';
+    }
+}
+
+function template_field_size_class($field_size = false)
+{
+
+    $css_framework = template_framework();
+
+    // Get default field size
+    if (!$field_size) {
+        return template_default_field_size_option();
+    }
+
+    if ($css_framework == 'mw-ui') {
+        return 'mw-flex-col-md-' . $field_size;
+    }
+
+    if ($css_framework == 'bootstrap3') {
+        return 'col-md-' . $field_size;
+    }
+
+    if ($css_framework == 'bootstrap4') {
+        return 'col-' . $field_size . ' ' . 'col-md-' . $field_size;
+    }
+
+    if ($css_framework == 'bootstrap5') {
+        return 'col-' . $field_size . ' ' . 'col-md-' . $field_size;
+    }
+
+    return $field_size;
+}
+
+function template_default_field_size_option($field = array())
+{
+    $css_framework = template_framework();
+
+    if ($css_framework == 'mw-ui') {
+        return 'mw-flex-col-md-12 mw-flex-col-sm-12 mw-flex-col-xs-12';
+    }
+
+    if ($css_framework == 'bootstrap3') {
+        return 'col-md-12 col-sm-12 col-xs-12';
+    }
+
+    if ($css_framework == 'bootstrap4') {
+        return 'col-12 col-sm-12 col-xs-12';
+    }
+
+    if ($css_framework == 'bootstrap5') {
+        return 'col-12 col-sm-12 col-xs-12';
+    }
+
+}
+
+function get_template_default_field_size_option()
+{
+    return template_default_field_size_option();
+}
+
+function get_template_field_size_class()
+{
+    return template_field_size_class();
+}
+
+function get_template_input_field_class()
+{
+    return template_input_field_class();
+}
+
+function get_template_form_group_label_class()
+{
+    return template_form_group_label_class();
+}
+
+function get_template_form_group_class()
+{
+    return template_form_group_class();
+}
+
+function get_template_form_row_class()
+{
+    return template_form_row_class();
+}
+
+function get_template_row_class()
+{
+    return template_row_class();
+}
+
+function get_template_framework()
+{
+    return template_framework();
+}
+
+function get_template_default_css()
+{
+    return template_default_css();
+}
+
+function get_template_stylesheet()
+{
+    return template_stylesheet();
+}
+
+function get_template_option_group()
+{
+    return template_option_group();
+}
+
+function get_template_colors_settings()
+{
+    $getTemplateConfig = app()->template_manager->get_config();
+
+    if (!isset($getTemplateConfig)) {
+        throw new \MicroweberPackages\Template\Exceptions\MissingTemplateException('Template is not selected. Please do to admin panel and select a template.');
+
+    } else if (!isset($getTemplateConfig['dir_name'])) {
+        throw new \MicroweberPackages\Template\Exceptions\MissingTemplateException('Template dir_name is not set');
+    }
+
+    $optionGroupLess = 'mw-template-' . $getTemplateConfig['dir_name'];
+
+    $colors = [];
+    if (isset($getTemplateConfig['stylesheet_compiler']['settings'])) {
+        foreach ($getTemplateConfig['stylesheet_compiler']['settings'] as $key => $value) {
+
+            if (isset($value['type'])) {
+                if ($value['type'] !== 'color') {
+                    continue;
+                }
+            }
+
+            $value['value'] = get_option($key, $optionGroupLess);
+            if (empty($value['value']) && isset($value['default'])) {
+                $value['value'] = $value['default'];
+            }
+
+            $colors[] = [
+                'key' => $key,
+                'value' => $value['value'],
+            ];
+        }
+    }
+    return $colors;
+
+}
+
+//function get_template_meta_webmaster_tags()
+//{
+//    $in = new \MicroweberPackages\Template\Adapters\RenderHelpers\TemplateMetaTagsRenderer();
+//    return $in->get_template_meta_webmaster_tags();
+//
+//}
+
