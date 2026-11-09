@@ -1,12 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Function delete_option not found\.$#'
-			identifier: function.notFound
-			count: 2
-			path: src/Adapters/AdminTemplateStyle.php
-
-		-
 			message: '#^Function userfiles_path not found\.$#'
 			identifier: function.notFound
 			count: 1
@@ -145,54 +139,6 @@ parameters:
 			path: src/Adapters/MicroweberTemplate.php
 
 		-
-			message: '#^Class Modules\\Content\\Models\\Content not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Adapters/RenderHelpers/TemplateMetaTagsPlaceholderReplacer.php
-
-		-
-			message: '#^Function category_id not found\.$#'
-			identifier: function.notFound
-			count: 2
-			path: src/Adapters/RenderHelpers/TemplateMetaTagsPlaceholderReplacer.php
-
-		-
-			message: '#^Function content_description not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: src/Adapters/RenderHelpers/TemplateMetaTagsPlaceholderReplacer.php
-
-		-
-			message: '#^Function content_id not found\.$#'
-			identifier: function.notFound
-			count: 2
-			path: src/Adapters/RenderHelpers/TemplateMetaTagsPlaceholderReplacer.php
-
-		-
-			message: '#^Function get_content_by_id not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: src/Adapters/RenderHelpers/TemplateMetaTagsPlaceholderReplacer.php
-
-		-
-			message: '#^Function is_home not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: src/Adapters/RenderHelpers/TemplateMetaTagsPlaceholderReplacer.php
-
-		-
-			message: '#^Function page_id not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: src/Adapters/RenderHelpers/TemplateMetaTagsPlaceholderReplacer.php
-
-		-
-			message: '#^Function post_id not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: src/Adapters/RenderHelpers/TemplateMetaTagsPlaceholderReplacer.php
-
-		-
 			message: '#^Undefined variable\: \$found_mod$#'
 			identifier: variable.undefined
 			count: 2
@@ -205,68 +151,8 @@ parameters:
 			path: src/Adapters/RenderHelpers/TemplateMetaTagsPlaceholderReplacer.php
 
 		-
-			message: '#^Call to static method newDocument\(\) on an unknown class phpQuery\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Adapters/RenderHelpers/TemplateOptimizeLoadingHelper.php
-
-		-
-			message: '#^Function pq not found\.$#'
-			identifier: function.notFound
-			count: 9
-			path: src/Adapters/RenderHelpers/TemplateOptimizeLoadingHelper.php
-
-		-
 			message: '#^Access to an undefined property MicroweberPackages\\App\\LaravelApplication\:\:\$template_manager\.$#'
 			identifier: property.notFound
-			count: 1
-			path: src/Adapters/TemplateCssParser.php
-
-		-
-			message: '#^Call to method ModifyVars\(\) on an unknown class Less_Parser\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Adapters/TemplateCssParser.php
-
-		-
-			message: '#^Call to method addImportPath\(\) on an unknown class ScssPhp\\ScssPhp\\Compiler\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Adapters/TemplateCssParser.php
-
-		-
-			message: '#^Call to method addParsedFile\(\) on an unknown class ScssPhp\\ScssPhp\\Compiler\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Adapters/TemplateCssParser.php
-
-		-
-			message: '#^Call to method compile\(\) on an unknown class ScssPhp\\ScssPhp\\Compiler\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Adapters/TemplateCssParser.php
-
-		-
-			message: '#^Call to method getCss\(\) on an unknown class Less_Parser\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Adapters/TemplateCssParser.php
-
-		-
-			message: '#^Call to method parseFile\(\) on an unknown class Less_Parser\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/Adapters/TemplateCssParser.php
-
-		-
-			message: '#^Call to method setSourceMapOptions\(\) on an unknown class ScssPhp\\ScssPhp\\Compiler\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Adapters/TemplateCssParser.php
-
-		-
-			message: '#^Call to method setVariables\(\) on an unknown class ScssPhp\\ScssPhp\\Compiler\.$#'
-			identifier: class.notFound
 			count: 1
 			path: src/Adapters/TemplateCssParser.php
 
@@ -274,18 +160,6 @@ parameters:
 			message: '#^Constant MW_VERSION not found\.$#'
 			identifier: constant.notFound
 			count: 2
-			path: src/Adapters/TemplateCssParser.php
-
-		-
-			message: '#^Function media_uploads_path not found\.$#'
-			identifier: function.notFound
-			count: 2
-			path: src/Adapters/TemplateCssParser.php
-
-		-
-			message: '#^Function media_uploads_url not found\.$#'
-			identifier: function.notFound
-			count: 1
 			path: src/Adapters/TemplateCssParser.php
 
 		-
@@ -303,18 +177,6 @@ parameters:
 		-
 			message: '#^Function userfiles_url not found\.$#'
 			identifier: function.notFound
-			count: 1
-			path: src/Adapters/TemplateCssParser.php
-
-		-
-			message: '#^Instantiated class Less_Parser not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Adapters/TemplateCssParser.php
-
-		-
-			message: '#^Instantiated class ScssPhp\\ScssPhp\\Compiler not found\.$#'
-			identifier: class.notFound
 			count: 1
 			path: src/Adapters/TemplateCssParser.php
 
@@ -349,31 +211,7 @@ parameters:
 			path: src/Adapters/TemplateIconFonts.php
 
 		-
-			message: '#^Call to method getCss\(\) on an unknown class Less_Parser\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/Adapters/TemplateStackRenderer.php
-
-		-
-			message: '#^Call to method parseFile\(\) on an unknown class Less_Parser\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/Adapters/TemplateStackRenderer.php
-
-		-
 			message: '#^Function dir2url not found\.$#'
-			identifier: function.notFound
-			count: 2
-			path: src/Adapters/TemplateStackRenderer.php
-
-		-
-			message: '#^Function media_uploads_path not found\.$#'
-			identifier: function.notFound
-			count: 2
-			path: src/Adapters/TemplateStackRenderer.php
-
-		-
-			message: '#^Function media_uploads_url not found\.$#'
 			identifier: function.notFound
 			count: 2
 			path: src/Adapters/TemplateStackRenderer.php
@@ -381,12 +219,6 @@ parameters:
 		-
 			message: '#^Function url2dir not found\.$#'
 			identifier: function.notFound
-			count: 2
-			path: src/Adapters/TemplateStackRenderer.php
-
-		-
-			message: '#^Instantiated class Less_Parser not found\.$#'
-			identifier: class.notFound
 			count: 2
 			path: src/Adapters/TemplateStackRenderer.php
 
@@ -409,159 +241,147 @@ parameters:
 			path: src/Adapters/TemplateStylesSettingsReader.php
 
 		-
-			message: '#^Call to static method where\(\) on an unknown class Modules\\Content\\Models\\Content\.$#'
-			identifier: class.notFound
+			message: '#^Call to an undefined static method Modules\\Content\\Models\\Content\:\:where\(\)\.$#'
+			identifier: staticMethod.notFound
 			count: 2
 			path: src/ContentJson/ContentJsonExporter.php
 
 		-
-			message: '#^Call to static method where\(\) on an unknown class Modules\\Menu\\Models\\Menu\.$#'
-			identifier: class.notFound
+			message: '#^Call to an undefined static method Modules\\Menu\\Models\\Menu\:\:where\(\)\.$#'
+			identifier: staticMethod.notFound
 			count: 2
 			path: src/ContentJson/ContentJsonExporter.php
 
 		-
-			message: '#^Access to property \$active_site_template on an unknown class Modules\\Content\\Models\\Content\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$content on an unknown class Modules\\Content\\Models\\Content\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$content_id on an unknown class Modules\\Menu\\Models\\Menu\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$content_type on an unknown class Modules\\Content\\Models\\Content\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$description on an unknown class Modules\\Content\\Models\\Content\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$id on an unknown class Modules\\Content\\Models\\Content\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$is_active on an unknown class Modules\\Content\\Models\\Content\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$is_active on an unknown class Modules\\Menu\\Models\\Menu\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$is_deleted on an unknown class Modules\\Content\\Models\\Content\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$item_type on an unknown class Modules\\Menu\\Models\\Menu\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$parent on an unknown class Modules\\Content\\Models\\Content\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$parent_id on an unknown class Modules\\Menu\\Models\\Menu\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$position on an unknown class Modules\\Menu\\Models\\Menu\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$price on an unknown class Modules\\Content\\Models\\Content\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$subtype on an unknown class Modules\\Content\\Models\\Content\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$title on an unknown class Modules\\Content\\Models\\Content\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$title on an unknown class Modules\\Menu\\Models\\Menu\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$url on an unknown class Modules\\Content\\Models\\Content\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Access to property \$url on an unknown class Modules\\Menu\\Models\\Menu\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Call to method save\(\) on an unknown class Modules\\Content\\Models\\Content\.$#'
-			identifier: class.notFound
+			message: '#^Access to an undefined property Modules\\Content\\Models\\Content\:\:\$active_site_template\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/ContentJson/ContentJsonInstaller.php
 
 		-
-			message: '#^Call to method save\(\) on an unknown class Modules\\Menu\\Models\\Menu\.$#'
-			identifier: class.notFound
+			message: '#^Access to an undefined property Modules\\Content\\Models\\Content\:\:\$content\.$#'
+			identifier: property.notFound
 			count: 1
 			path: src/ContentJson/ContentJsonInstaller.php
 
 		-
-			message: '#^Call to static method where\(\) on an unknown class Modules\\Content\\Models\\Content\.$#'
-			identifier: class.notFound
+			message: '#^Access to an undefined property Modules\\Content\\Models\\Content\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/ContentJson/ContentJsonInstaller.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Content\\Models\\Content\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/ContentJson/ContentJsonInstaller.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Content\\Models\\Content\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/ContentJson/ContentJsonInstaller.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Content\\Models\\Content\:\:\$is_deleted\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/ContentJson/ContentJsonInstaller.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Content\\Models\\Content\:\:\$parent\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/ContentJson/ContentJsonInstaller.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Content\\Models\\Content\:\:\$price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/ContentJson/ContentJsonInstaller.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Content\\Models\\Content\:\:\$subtype\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/ContentJson/ContentJsonInstaller.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Content\\Models\\Content\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/ContentJson/ContentJsonInstaller.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Content\\Models\\Content\:\:\$url\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/ContentJson/ContentJsonInstaller.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Menu\\Models\\Menu\:\:\$content_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/ContentJson/ContentJsonInstaller.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Menu\\Models\\Menu\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/ContentJson/ContentJsonInstaller.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Menu\\Models\\Menu\:\:\$item_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/ContentJson/ContentJsonInstaller.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Menu\\Models\\Menu\:\:\$parent_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/ContentJson/ContentJsonInstaller.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Menu\\Models\\Menu\:\:\$position\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/ContentJson/ContentJsonInstaller.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Menu\\Models\\Menu\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/ContentJson/ContentJsonInstaller.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Menu\\Models\\Menu\:\:\$url\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/ContentJson/ContentJsonInstaller.php
+
+		-
+			message: '#^Access to protected property Modules\\Content\\Models\\Content\:\:\$content_type\.$#'
+			identifier: property.protected
+			count: 1
+			path: src/ContentJson/ContentJsonInstaller.php
+
+		-
+			message: '#^Call to an undefined static method Modules\\Content\\Models\\Content\:\:where\(\)\.$#'
+			identifier: staticMethod.notFound
 			count: 3
 			path: src/ContentJson/ContentJsonInstaller.php
 
 		-
-			message: '#^Call to static method where\(\) on an unknown class Modules\\Menu\\Models\\Menu\.$#'
-			identifier: class.notFound
-			count: 2
+			message: '#^Call to an undefined static method Modules\\Content\\Models\\Content\:\:whereIn\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
 			path: src/ContentJson/ContentJsonInstaller.php
 
 		-
-			message: '#^Call to static method whereIn\(\) on an unknown class Modules\\Content\\Models\\Content\.$#'
-			identifier: class.notFound
-			count: 1
+			message: '#^Call to an undefined static method Modules\\Menu\\Models\\Menu\:\:where\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 2
 			path: src/ContentJson/ContentJsonInstaller.php
 
 		-
@@ -571,87 +391,9 @@ parameters:
 			path: src/ContentJson/ContentJsonInstaller.php
 
 		-
-			message: '#^Instantiated class Modules\\Content\\Models\\Content not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Instantiated class Modules\\Menu\\Models\\Menu not found\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^PHPDoc tag @var for variable \$product contains unknown class Modules\\Content\\Models\\Content\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/ContentJson/ContentJsonInstaller.php
-
-		-
-			message: '#^Call to an undefined method MicroweberPackages\\Template\\TemplateInstaller\:\:setBatchRestoring\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Http/Controllers/Api/TemplateApiController.php
-
-		-
-			message: '#^Call to an undefined method MicroweberPackages\\Template\\TemplateInstaller\:\:setFile\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Http/Controllers/Api/TemplateApiController.php
-
-		-
-			message: '#^Call to an undefined method MicroweberPackages\\Template\\TemplateInstaller\:\:setOvewriteById\(\)\.$#'
-			identifier: method.notFound
-			count: 2
-			path: src/Http/Controllers/Api/TemplateApiController.php
-
-		-
-			message: '#^Call to an undefined method MicroweberPackages\\Template\\TemplateInstaller\:\:setSessionId\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Http/Controllers/Api/TemplateApiController.php
-
-		-
-			message: '#^Call to an undefined method MicroweberPackages\\Template\\TemplateInstaller\:\:setToDeleteOldContent\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Http/Controllers/Api/TemplateApiController.php
-
-		-
-			message: '#^Call to an undefined method MicroweberPackages\\Template\\TemplateInstaller\:\:setToDeleteOldCssFiles\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Http/Controllers/Api/TemplateApiController.php
-
-		-
-			message: '#^Call to an undefined method MicroweberPackages\\Template\\TemplateInstaller\:\:setWriteOnDatabase\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Http/Controllers/Api/TemplateApiController.php
-
-		-
-			message: '#^Call to an undefined method MicroweberPackages\\Template\\TemplateInstaller\:\:start\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Http/Controllers/Api/TemplateApiController.php
-
-		-
-			message: '#^Call to static method generateSessionId\(\) on an unknown class Modules\\Backup\\SessionStepper\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Http/Controllers/Api/TemplateApiController.php
-
-		-
 			message: '#^Constant DS not found\.$#'
 			identifier: constant.notFound
 			count: 1
-			path: src/Http/Controllers/Api/TemplateApiController.php
-
-		-
-			message: '#^Function save_option not found\.$#'
-			identifier: function.notFound
-			count: 3
 			path: src/Http/Controllers/Api/TemplateApiController.php
 
 		-
@@ -665,12 +407,6 @@ parameters:
 			identifier: function.notFound
 			count: 1
 			path: src/Http/Controllers/Api/TemplateApiController.php
-
-		-
-			message: '#^Function get_option not found\.$#'
-			identifier: function.notFound
-			count: 2
-			path: src/Http/Controllers/Api/TemplateStyleEditorSettingsController.php
 
 		-
 			message: '#^Function templates_dir not found\.$#'
@@ -691,28 +427,10 @@ parameters:
 			path: src/Http/Controllers/TemplatePreviewController.php
 
 		-
-			message: '#^Function get_options not found\.$#'
-			identifier: function.notFound
-			count: 3
-			path: src/Http/Controllers/TemplatePreviewController.php
-
-		-
-			message: '#^Function save_option not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: src/Http/Controllers/TemplatePreviewController.php
-
-		-
 			message: '#^Function templates_dir not found\.$#'
 			identifier: function.notFound
 			count: 1
 			path: src/Http/Controllers/TemplatePreviewController.php
-
-		-
-			message: '#^Function get_option not found\.$#'
-			identifier: function.notFound
-			count: 2
-			path: src/Http/Livewire/Admin/LiveEditTemplateSettingsSidebar.php
 
 		-
 			message: '#^Function templates_dir not found\.$#'
@@ -736,12 +454,6 @@ parameters:
 			message: '#^Constant TEMPLATE_DIR not found\.$#'
 			identifier: constant.notFound
 			count: 2
-			path: src/LayoutsManager.php
-
-		-
-			message: '#^Function module_name_encode not found\.$#'
-			identifier: function.notFound
-			count: 1
 			path: src/LayoutsManager.php
 
 		-
@@ -823,33 +535,9 @@ parameters:
 			path: src/TemplateManager.php
 
 		-
-			message: '#^Function get_option not found\.$#'
-			identifier: function.notFound
-			count: 3
-			path: src/TemplateManager.php
-
-		-
-			message: '#^Function media_base_url not found\.$#'
-			identifier: function.notFound
-			count: 4
-			path: src/TemplateManager.php
-
-		-
 			message: '#^Function modules_url not found\.$#'
 			identifier: function.notFound
 			count: 4
-			path: src/TemplateManager.php
-
-		-
-			message: '#^Function mw_footer_scripts not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: src/TemplateManager.php
-
-		-
-			message: '#^Function mw_header_scripts not found\.$#'
-			identifier: function.notFound
-			count: 1
 			path: src/TemplateManager.php
 
 		-
@@ -923,12 +611,6 @@ parameters:
 			identifier: phpDoc.parseError
 			count: 1
 			path: src/TemplateManager.php
-
-		-
-			message: '#^Function get_option not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: src/helpers/templates.php
 
 		-
 			message: '#^Function templates_dir not found\.$#'
