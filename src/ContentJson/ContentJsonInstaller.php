@@ -2,8 +2,11 @@
 
 namespace MicroweberPackages\Template\ContentJson;
 
+use Illuminate\Support\Facades\Storage;
 use Modules\Content\Models\Content;
 use Modules\Menu\Models\Menu;
+use MicroweberPackages\Template\Export\TemplateMediaBundler;
+use MicroweberPackages\TemplateFonts\Services\TemplateFontsManager;
 
 /**
  * Applies a flexible content.json payload (pages, posts, products and menus) to
@@ -26,16 +29,22 @@ use Modules\Menu\Models\Menu;
  *   }],
  *   "posts":    [ { same page shape, content_type defaults to "post",    "parent": "<blog-url>" } ],
  *   "products": [ { same page shape, content_type "product", "price": 9.99, "sku": "…", "qty": "nolimit" } ],
- *   "menus": { "header_menu": [ {"page":"home","title":"Home"}, {"url":"https://x","title":"Ext"} ], "footer_menu": [...] }
+ *   "menus": { "header_menu": [ {"page":"home","title":"Home"}, {"url":"https://x","title":"Ext"} ], "footer_menu": [...] },
+ *   "fonts": [ {"family":"Poppins","provider":"google"}, {"family":"Inter"} ]   // enabled on install
  * }
  */
 class ContentJsonInstaller
 {
     protected array $data = [];
     protected ?string $template = null;
+    protected ?string $templateDir = null;   // dir holding content.json + resources/assets/media
     protected string $importType = 'full';   // full | delete | only_media
     protected string $language = 'en';
     protected $logger = null;
+
+    /** Resolved base URL for this template's materialised media (for {{TPL_MEDIA}}), or null. */
+    protected ?string $mediaBaseUrl = null;
+    protected bool $mediaResolved = false;
 
     /** url => created/updated content id, built during the content pass and used to wire menus. */
     protected array $urlToId = [];
@@ -48,10 +57,17 @@ class ContentJsonInstaller
         $raw = is_file($path) ? file_get_contents($path) : false;
         $json = $raw !== false ? json_decode($raw, true) : null;
         $this->data = is_array($json) ? $json : [];
+        // The template dir (holding resources/assets/media) is the content.json's dir.
+        if (is_file($path)) {
+            $this->templateDir = dirname($path);
+        }
         return $this;
     }
 
     public function setTemplate(?string $template): self { $this->template = $template; return $this; }
+
+    /** Explicitly set the template folder (holding resources/assets/media/). */
+    public function setTemplateDir(?string $dir): self { $this->templateDir = $dir ? rtrim($dir, '/\\') : null; return $this; }
     public function setImportType(string $type): self { $this->importType = $type; return $this; }
     public function setLanguage(?string $lang): self { if ($lang) { $this->language = $lang; } return $this; }
     public function setLogger($logger): self { $this->logger = $logger; return $this; }
@@ -103,6 +119,7 @@ class ContentJsonInstaller
 
         $this->installMenus();
         $this->applyColorScheme();
+        $this->installFonts();
 
         if (function_exists('clearcache')) {
             clearcache();
@@ -121,10 +138,10 @@ class ContentJsonInstaller
     protected function resolveBody(array $item): string
     {
         if (isset($item['html']) && is_string($item['html'])) {
-            return $item['html'];
+            return $this->resolveMediaPlaceholders($item['html']);
         }
         if (isset($item['content']) && is_string($item['content'])) {
-            return $item['content'];
+            return $this->resolveMediaPlaceholders($item['content']);
         }
         if (!empty($item['sections']) && is_array($item['sections'])) {
             $data = $item['data'] ?? ($this->data['data'] ?? []);
@@ -171,6 +188,10 @@ class ContentJsonInstaller
         $content->save();
 
         $this->urlToId[$url] = $content->id;
+        $this->installGallery($content, $item);
+        $this->installModuleOptions($item);
+        $this->installModuleGalleries($item);
+        $this->installContentData($content, $item);
         $this->rememberMenuRequests($url, $item);
         $this->log[] = "{$content->content_type} '{$url}' -> #{$content->id}";
     }
@@ -211,6 +232,10 @@ class ContentJsonInstaller
         $product->save();
 
         $this->urlToId[$url] = $product->id;
+        $this->installGallery($product, $item);
+        $this->installModuleOptions($item);
+        $this->installModuleGalleries($item);
+        $this->installContentData($product, $item);
         $this->rememberMenuRequests($url, $item);
         $this->log[] = "product '{$url}' -> #{$product->id}" . (isset($item['price']) ? " (price {$item['price']})" : '');
     }
@@ -337,6 +362,360 @@ class ContentJsonInstaller
         } catch (\Throwable $e) {
             $this->log[] = 'color scheme save skipped: ' . $e->getMessage();
         }
+    }
+
+    /**
+     * Recreate a content item's attached gallery (Pictures module) — media table rows
+     * keyed by (rel_type = morph_name(Content), rel_id = the NEW content id). Filenames
+     * are resolved from the {{TPL_MEDIA}} placeholder (materialising the bundled files
+     * into the target userfiles). Idempotent: existing attached rows are replaced.
+     */
+    protected function installGallery($content, array $item): void
+    {
+        $gallery = $item['gallery'] ?? [];
+        if (!is_array($gallery) || $gallery === []) {
+            return;
+        }
+        $mediaClass = '\\Modules\\Media\\Models\\Media';
+        if (!class_exists($mediaClass) || !function_exists('morph_name')) {
+            $this->log[] = 'gallery: Media model unavailable, skipped';
+            return;
+        }
+        $relType = morph_name(Content::class);
+
+        try {
+            // Replace any existing attached gallery for idempotent re-imports.
+            $mediaClass::query()->where('rel_type', $relType)->where('rel_id', (int) $content->id)->delete();
+        } catch (\Throwable) {
+        }
+
+        $position = 0;
+        $made = 0;
+        foreach ($gallery as $g) {
+            if (!is_array($g)) {
+                continue;
+            }
+            $filename = (string) ($g['filename'] ?? '');
+            if ($filename === '') {
+                continue;
+            }
+            $filename = $this->resolveMediaPlaceholders($filename);
+
+            try {
+                $m = new $mediaClass();
+                $m->rel_type = $relType;
+                $m->rel_id = (int) $content->id;
+                $m->filename = $filename;
+                $m->media_type = (string) ($g['media_type'] ?? 'picture');
+                $m->position = (int) ($g['position'] ?? $position);
+                if (isset($g['image_options'])) {
+                    $m->image_options = $g['image_options'];
+                }
+                if (isset($g['title'])) {
+                    $m->title = (string) $g['title'];
+                }
+                if (isset($g['description'])) {
+                    $m->description = (string) $g['description'];
+                }
+                $m->save();
+                $made++;
+            } catch (\Throwable $e) {
+                $this->log[] = 'gallery: row failed (' . $e->getMessage() . ')';
+            }
+            $position++;
+        }
+        if ($made > 0) {
+            $this->log[] = "gallery '{$content->url}': {$made} image(s)";
+        }
+    }
+
+    /**
+     * Recreate a content item's custom fields / metadata (content_data) under the new
+     * content id via setContentData (the model's saved hook upserts the rows). Media
+     * placeholders in values resolve to the materialised userfiles URL. No-op when the
+     * item shipped no content_data.
+     */
+    protected function installContentData($content, array $item): void
+    {
+        $map = $item['content_data'] ?? [];
+        if (!is_array($map) || $map === [] || !is_object($content) || !method_exists($content, 'setContentData')) {
+            return;
+        }
+        $resolved = [];
+        foreach ($map as $field => $value) {
+            $resolved[$field] = is_string($value) ? $this->resolveMediaPlaceholders($value) : $value;
+        }
+        try {
+            $content->setContentData($resolved)->save();
+            $this->log[] = "content_data '{$content->url}': " . count($resolved) . ' field(s)';
+        } catch (\Throwable $e) {
+            $this->log[] = 'content_data failed (' . $e->getMessage() . ')';
+        }
+    }
+
+    /**
+     * Recreate free (module-instance) galleries — media rows keyed by
+     * (rel_type='module', rel_id=the module-instance id from the content HTML, stable
+     * across sites). Placeholders in filenames resolve to the materialised userfiles
+     * URL. Idempotent: existing rows for each module id are replaced.
+     */
+    protected function installModuleGalleries(array $item): void
+    {
+        $galleries = $item['module_galleries'] ?? [];
+        if (!is_array($galleries) || $galleries === []) {
+            return;
+        }
+        $mediaClass = '\\Modules\\Media\\Models\\Media';
+        if (!class_exists($mediaClass)) {
+            return;
+        }
+
+        $made = 0;
+        foreach ($galleries as $moduleId => $rows) {
+            if (!is_array($rows)) {
+                continue;
+            }
+            try {
+                $mediaClass::query()->where('rel_type', 'module')->where('rel_id', (string) $moduleId)->delete();
+            } catch (\Throwable) {
+            }
+            $position = 0;
+            foreach ($rows as $g) {
+                if (!is_array($g)) {
+                    continue;
+                }
+                $filename = (string) ($g['filename'] ?? '');
+                if ($filename === '') {
+                    continue;
+                }
+                $filename = $this->resolveMediaPlaceholders($filename);
+                try {
+                    $m = new $mediaClass();
+                    $m->rel_type = 'module';
+                    $m->rel_id = (string) $moduleId;
+                    $m->filename = $filename;
+                    $m->media_type = (string) ($g['media_type'] ?? 'picture');
+                    $m->position = (int) ($g['position'] ?? $position);
+                    if (isset($g['image_options'])) {
+                        $m->image_options = $g['image_options'];
+                    }
+                    if (isset($g['title'])) {
+                        $m->title = (string) $g['title'];
+                    }
+                    $m->save();
+                    $made++;
+                } catch (\Throwable $e) {
+                    $this->log[] = 'module gallery: row failed (' . $e->getMessage() . ')';
+                }
+                $position++;
+            }
+        }
+        if ($made > 0) {
+            $this->log[] = "module galleries: {$made} image(s)";
+        }
+    }
+
+    /**
+     * Recreate the module-instance options the template shipped (background images,
+     * slider/toggle settings, …), keyed by the module-instance id from the content
+     * HTML (stable across sites). Media placeholders in option values are resolved to
+     * the materialised userfiles URL. save_module_option upserts by (key, module id),
+     * so re-imports are idempotent.
+     */
+    protected function installModuleOptions(array $item): void
+    {
+        $mods = $item['module_options'] ?? [];
+        if (!is_array($mods) || $mods === [] || !function_exists('save_module_option')) {
+            return;
+        }
+        $count = 0;
+        foreach ($mods as $moduleId => $mod) {
+            if (!is_array($mod) || !isset($mod['options']) || !is_array($mod['options'])) {
+                continue;
+            }
+            $type = (string) ($mod['type'] ?? '');
+            foreach ($mod['options'] as $key => $value) {
+                if (is_string($value)) {
+                    $value = $this->resolveMediaPlaceholders($value);
+                }
+                try {
+                    save_module_option((string) $key, $value, (string) $moduleId, $type !== '' ? $type : false);
+                } catch (\Throwable $e) {
+                    $this->log[] = "module_option '{$key}' failed ({$e->getMessage()})";
+                }
+            }
+            $count++;
+        }
+        if ($count > 0) {
+            $this->log[] = "module options: {$count} module(s)";
+        }
+    }
+
+    /**
+     * Enable the fonts the template shipped in content.json ("fonts": [{family,
+     * provider}, …]). The exporter freezes the picked-font families here; without
+     * this pass an installed/activated template would render with the design CSS's
+     * font var() fallbacks instead of the fonts the author actually chose. Enabling
+     * downloads (or, on S3, mirrors) the woff2 + font.css the same way the Live-Edit
+     * font picker does, so multisite/CDN deploys serve them correctly.
+     */
+    protected function installFonts(): void
+    {
+        $fonts = $this->data['fonts'] ?? [];
+        if (!is_array($fonts) || $fonts === []) {
+            return;
+        }
+
+        if (!class_exists(TemplateFontsManager::class) || !app()->bound(TemplateFontsManager::class)) {
+            $this->log[] = 'fonts: TemplateFontsManager unavailable, skipped ' . count($fonts) . ' font(s)';
+            return;
+        }
+
+        try {
+            $manager = app(TemplateFontsManager::class);
+        } catch (\Throwable $e) {
+            $this->log[] = 'fonts: could not resolve manager (' . $e->getMessage() . ')';
+            return;
+        }
+
+        $enabled = 0;
+        foreach ($fonts as $font) {
+            // Accept both {family, provider} objects and bare family strings.
+            if (is_string($font)) {
+                $font = ['family' => $font];
+            }
+            if (!is_array($font)) {
+                continue;
+            }
+            $family = trim((string) ($font['family'] ?? ''));
+            if ($family === '') {
+                continue;
+            }
+            $provider = trim((string) ($font['provider'] ?? 'google')) ?: 'google';
+            $category = isset($font['category']) ? (string) $font['category'] : null;
+            try {
+                if ($manager->enableFont($family, $provider, $category)) {
+                    $enabled++;
+                }
+            } catch (\Throwable $e) {
+                $this->log[] = "fonts: '{$family}' skipped ({$e->getMessage()})";
+            }
+        }
+
+        if ($enabled > 0) {
+            $this->log[] = "fonts: enabled {$enabled} of " . count($fonts) . ' font(s)';
+        }
+    }
+
+    /**
+     * Swap the {{TPL_MEDIA}} placeholder (written by {@see TemplateMediaBundler} on
+     * export) for the URL of this template's media once it is materialised into the
+     * target site's userfiles. If materialisation is unavailable the placeholder is
+     * left in place rather than producing a half-rewritten URL.
+     */
+    protected function resolveMediaPlaceholders(string $html): string
+    {
+        if (!str_contains($html, TemplateMediaBundler::PLACEHOLDER)) {
+            return $html;
+        }
+        $base = $this->mediaBaseUrl();
+        if ($base === null || $base === '') {
+            return $html;
+        }
+        return str_replace(TemplateMediaBundler::PLACEHOLDER, $base, $html);
+    }
+
+    /** Lazily materialise the template's bundled media and cache the base URL. */
+    protected function mediaBaseUrl(): ?string
+    {
+        if (!$this->mediaResolved) {
+            $this->mediaResolved = true;
+            $this->mediaBaseUrl = $this->materializeMedia();
+        }
+        return $this->mediaBaseUrl;
+    }
+
+    /**
+     * Copy the template's resources/assets/media/* into the target site's userfiles
+     * (S3-safe, per-site, idempotent) and return the base URL under which the files
+     * are served (so {{TPL_MEDIA}}/<name> resolves). Returns null when there is no
+     * bundled media or the userfiles disk API is unavailable.
+     */
+    protected function materializeMedia(): ?string
+    {
+        $dir = $this->bundledMediaDir();
+        if ($dir === null) {
+            return null;
+        }
+        $files = array_filter(glob($dir . '/*') ?: [], 'is_file');
+        if ($files === []) {
+            return null;
+        }
+        if (!function_exists('userfiles_disk')) {
+            return null;
+        }
+
+        $tpl = strtolower((string) ($this->template ?? (function_exists('template_name') ? template_name() : 'template')));
+        $tpl = preg_replace('/[^a-z0-9_-]+/', '', $tpl) ?: 'template';
+
+        // Disk-relative key prefix — per-site and S3-safe.
+        $rel = function_exists('media_base_path_relative')
+            ? media_base_path_relative()
+            : (function_exists('userfiles_base_relpath') ? rtrim(userfiles_base_relpath('media'), '/') . '/' : 'userfiles/media/');
+        $prefix = rtrim($rel, '/') . '/templates/' . $tpl . '/';
+
+        try {
+            $disk = Storage::disk(userfiles_disk());
+        } catch (\Throwable $e) {
+            $this->log[] = 'media: userfiles disk unavailable (' . $e->getMessage() . ')';
+            return null;
+        }
+
+        $written = 0;
+        foreach ($files as $file) {
+            $key = $prefix . basename($file);
+            try {
+                if (!$disk->exists($key)) {
+                    $disk->put($key, (string) file_get_contents($file));
+                }
+                $written++;
+            } catch (\Throwable $e) {
+                $this->log[] = 'media: failed ' . basename($file) . ' (' . $e->getMessage() . ')';
+            }
+        }
+
+        // Derive the folder URL the same way for local and remote disks.
+        $base = null;
+        try {
+            $probe = $disk->url($prefix . '__mw_p__');
+            $cut = strrpos($probe, '/');
+            if ($cut !== false) {
+                $base = substr($probe, 0, $cut);
+            }
+        } catch (\Throwable) {
+            $base = null;
+        }
+        if ($base === null && function_exists('media_base_url')) {
+            $base = rtrim((string) media_base_url(), '/') . '/templates/' . $tpl;
+        }
+
+        $this->log[] = "media: materialised {$written} file(s) -> " . (string) $base;
+        return $base ? rtrim($base, '/') : null;
+    }
+
+    /** Locate the template's bundled media dir (resources/assets/media). */
+    protected function bundledMediaDir(): ?string
+    {
+        if ($this->templateDir && is_dir($this->templateDir . '/resources/assets/media')) {
+            return $this->templateDir . '/resources/assets/media';
+        }
+        if ($this->template && function_exists('template_full_dir')) {
+            $cand = rtrim((string) template_full_dir($this->template), '/\\') . '/resources/assets/media';
+            if (is_dir($cand)) {
+                return $cand;
+            }
+        }
+        return null;
     }
 
     /** For import_type=delete: remove existing page/post/product content before importing. */

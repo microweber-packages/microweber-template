@@ -161,7 +161,214 @@ class ContentJsonExporter
             $item['description'] = $row->description;
         }
         $item['html'] = (string) ($row->content ?? '');
+        $gallery = $this->exportGallery($row);
+        if ($gallery !== []) {
+            $item['gallery'] = $gallery;
+        }
+        $moduleOptions = $this->exportModuleOptions($item['html']);
+        if ($moduleOptions !== []) {
+            $item['module_options'] = $moduleOptions;
+        }
+        $moduleGalleries = $this->exportModuleGalleries($item['html']);
+        if ($moduleGalleries !== []) {
+            $item['module_galleries'] = $moduleGalleries;
+        }
+        $contentData = $this->exportContentData($row);
+        if ($contentData !== []) {
+            $item['content_data'] = $contentData;
+        }
         return $item;
+    }
+
+    /**
+     * Export a content item's custom fields / metadata (content_data rows, via
+     * setContentData/setCustomField). This carries single-image custom-field pickers
+     * (bundled as portable media by the exporter) and any other per-content options
+     * so they survive the round-trip. Keyed by field name.
+     *
+     * @return array<string,mixed>
+     */
+    protected function exportContentData($row): array
+    {
+        if (!is_object($row) || !method_exists($row, 'getContentData')) {
+            return [];
+        }
+        try {
+            $map = $row->getContentData();
+        } catch (\Throwable) {
+            return [];
+        }
+        return is_array($map) ? $map : [];
+    }
+
+    /**
+     * Export free (module-instance) galleries — Pictures module instances whose
+     * images are stored as media rows keyed by (rel_type='module', rel_id=module id)
+     * rather than attached to a content id. The module id is read from the verbatim
+     * `<module id="…">` tag and is stable across sites, so the installer recreates the
+     * rows under the same id. Image URLs are rewritten to portable placeholders by
+     * the exporter's media bundler.
+     *
+     * @return array<string, list<array<string,mixed>>>  moduleId => gallery rows
+     */
+    protected function exportModuleGalleries(string $html): array
+    {
+        $mediaClass = '\\Modules\\Media\\Models\\Media';
+        if ($html === '' || !class_exists($mediaClass)) {
+            return [];
+        }
+        if (!preg_match_all('#<module\b([^>]*)>#i', $html, $tags)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($tags[1] as $attrs) {
+            $id = $this->tagAttr($attrs, 'id');
+            if ($id === '' || isset($out[$id])) {
+                continue;
+            }
+            try {
+                $rows = $mediaClass::query()
+                    ->where('rel_type', 'module')
+                    ->where('rel_id', $id)
+                    ->orderBy('position')
+                    ->get();
+            } catch (\Throwable) {
+                continue;
+            }
+            $gallery = [];
+            foreach ($rows as $m) {
+                $filename = (string) $m->filename;
+                if ($filename === '') {
+                    continue;
+                }
+                $g = ['filename' => $filename];
+                if ($m->media_type) {
+                    $g['media_type'] = (string) $m->media_type;
+                }
+                if ($m->position !== null) {
+                    $g['position'] = (int) $m->position;
+                }
+                if (!empty($m->image_options)) {
+                    $g['image_options'] = $m->image_options;
+                }
+                if ($m->title) {
+                    $g['title'] = (string) $m->title;
+                }
+                $gallery[] = $g;
+            }
+            if ($gallery !== []) {
+                $out[$id] = $gallery;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Export the saved options of every module instance referenced in the content
+     * HTML — keyed by the module-instance id (the `<module id="…">` in the stored,
+     * verbatim HTML, which stays identical on the target site, so no id remap is
+     * needed). This makes module configuration portable (background images, slider
+     * settings, toggles, …) which is otherwise lost on export. Media URLs inside the
+     * option values are rewritten to portable placeholders by the exporter's bundler.
+     *
+     * @return array<string, array{type:string, options:array<string,mixed>}>
+     */
+    protected function exportModuleOptions(string $html): array
+    {
+        if ($html === '' || !function_exists('get_module_options')) {
+            return [];
+        }
+        if (!preg_match_all('#<module\b([^>]*)>#i', $html, $tags)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($tags[1] as $attrs) {
+            $id = $this->tagAttr($attrs, 'id');
+            if ($id === '' || isset($out[$id])) {
+                continue;
+            }
+            try {
+                $opts = get_module_options($id); // keyed by module-instance id
+            } catch (\Throwable) {
+                continue;
+            }
+            $kv = [];
+            foreach ((array) $opts as $o) {
+                if (is_array($o) && isset($o['option_key']) && is_string($o['option_key'])) {
+                    $kv[$o['option_key']] = $o['option_value'] ?? null;
+                }
+            }
+            if ($kv === []) {
+                continue;
+            }
+            $out[$id] = ['type' => $this->tagAttr($attrs, 'type'), 'options' => $kv];
+        }
+        return $out;
+    }
+
+    /** Read a single HTML attribute value out of a tag's attribute string. */
+    protected function tagAttr(string $attrs, string $name): string
+    {
+        if (preg_match('#\b' . preg_quote($name, '#') . '\s*=\s*["\']([^"\']*)["\']#i', $attrs, $m)) {
+            return $m[1];
+        }
+        return '';
+    }
+
+    /**
+     * Export a content item's attached gallery (Pictures module) — rows in the media
+     * table keyed by (rel_type = morph_name(Content), rel_id = content id). Filenames
+     * are the site-local URLs; the exporter's media bundler rewrites them to portable
+     * placeholders and the installer recreates the rows against the new content id.
+     * Module-instance galleries (rel_type='module') are out of scope (their module id
+     * is embedded in the HTML and not remapped).
+     *
+     * @return list<array<string,mixed>>
+     */
+    protected function exportGallery($row): array
+    {
+        $mediaClass = '\\Modules\\Media\\Models\\Media';
+        if (!class_exists($mediaClass) || !function_exists('morph_name')) {
+            return [];
+        }
+        $relType = morph_name(Content::class);
+        try {
+            $rows = $mediaClass::query()
+                ->where('rel_type', $relType)
+                ->where('rel_id', (int) $row->id)
+                ->orderBy('position')
+                ->get();
+        } catch (\Throwable) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($rows as $m) {
+            $filename = (string) $m->filename;
+            if ($filename === '') {
+                continue;
+            }
+            $g = ['filename' => $filename];
+            if ($m->media_type) {
+                $g['media_type'] = (string) $m->media_type;
+            }
+            if ($m->position !== null) {
+                $g['position'] = (int) $m->position;
+            }
+            if (!empty($m->image_options)) {
+                $g['image_options'] = $m->image_options; // cast to array
+            }
+            if ($m->title) {
+                $g['title'] = (string) $m->title;
+            }
+            if ($m->description) {
+                $g['description'] = (string) $m->description;
+            }
+            $out[] = $g;
+        }
+        return $out;
     }
 
     /** Export menus as { menu_title: [ {page|url, title}, … ] }. */
